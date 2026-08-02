@@ -8,6 +8,8 @@ const { incrementCount, buildVisitsSvg, isConfigured } = require('./lib/visits')
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', true);
+
 function readCatParams(req) {
   return {
     speed: sanitize(req.query.speed, ['slow', 'normal', 'fast'], 'normal'),
@@ -44,7 +46,8 @@ app.get('/visits', async (req, res) => {
   }
 
   try {
-    const count = await incrementCount();
+    const visitorKey = `${req.ip}:${req.get('user-agent') || ''}`;
+    const count = await incrementCount(visitorKey);
     sendSvg(res, buildVisitsSvg({ colors, count }));
   } catch (err) {
     console.error('visits counter error:', err.message);
