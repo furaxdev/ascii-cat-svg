@@ -1,6 +1,6 @@
 # ascii-cat-svg
 
-Petit service Express qui génère à la volée un SVG animé d'un chat ASCII assis (clignement des yeux + léger balancement), pour être linké dans un README GitHub.
+Petit service Express qui génère à la volée un SVG animé d'un chat ASCII assis (clignement des yeux, léger balancement, queue qui remue), pour être linké dans un README GitHub.
 
 ```
  /\_/\

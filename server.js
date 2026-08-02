@@ -26,32 +26,43 @@ function escapeXml(str) {
     .replace(/>/g, '&gt;');
 }
 
-// The blink swaps between two stacked <text> nodes faded in/out with CSS
-// opacity keyframes, rather than mutating text content (unreliable across
-// SVG renderers, and GitHub's image sanitizer strips <animate>/<set>).
+// Each row of the ASCII art is anchored to the same left x instead of being
+// centered per-line: with monospace glyphs, centering rows of different
+// lengths independently (text-anchor="middle" per <text>) throws off the
+// column alignment between rows — e.g. the whiskers row ends up a
+// half-character off from the eyes row above it. A shared left edge plus
+// consistent leading spaces per row keeps every column lined up.
+const CHAR_WIDTH = 9.6; // approx advance width of bold 16px monospace
+const ROWS = {
+  head: '  /\\_/\\',
+  eyesOpen: ' ( o.o )',
+  eyesClosed: ' ( -.- )',
+  whiskers: '  > ^ <',
+  legs: ' /|   |\\',
+  feet: '(_)   (_)',
+};
+const MAX_ROW_LEN = 9; // length of "(_)   (_)", the widest row
+
 function buildCatSvg({ speed, colors }) {
   const speedCfg = SPEED_MAP[speed];
   const catColor = COLOR_MAP[colors];
   const glow = `drop-shadow(0 0 3px ${catColor})`;
 
-  const width = 220;
-  const height = 130;
+  const width = 240;
+  const height = 140;
   const lineHeight = 20;
   const startY = 20;
+  const startX = Math.round((width - MAX_ROW_LEN * CHAR_WIDTH) / 2);
 
-  const topLine = ' /\\_/\\';
-  const eyesOpen = '( o.o )';
-  const eyesClosed = '( -.- )';
-  const bodyLines = [' > ^ <', '/|   |\\', '(_)   (_)'];
+  const row = (text, y, id) =>
+    `<text${id ? ` id="${id}"` : ''} x="${startX}" y="${y}" xml:space="preserve">${escapeXml(
+      text
+    )}</text>`;
 
-  const bodyTspans = bodyLines
-    .map((line, i) => {
-      const y = startY + (i + 2) * lineHeight;
-      return `<text x="50%" y="${y}" text-anchor="middle" xml:space="preserve">${escapeXml(
-        line
-      )}</text>`;
-    })
-    .join('\n      ');
+  // Anchored just past the right edge of the text block so the tail curls
+  // beside the cat instead of crossing over the legs/feet glyphs.
+  const tailBaseX = Math.round(startX + MAX_ROW_LEN * CHAR_WIDTH);
+  const tailBaseY = startY + 4 * lineHeight;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <style>
@@ -84,19 +95,31 @@ function buildCatSvg({ speed, colors }) {
       0%, 90%, 100% { opacity: 0; }
       92%, 98% { opacity: 1; }
     }
+    #tail {
+      fill: none;
+      stroke: ${catColor};
+      stroke-width: 3;
+      stroke-linecap: round;
+      filter: ${glow};
+      transform-box: view-box;
+      transform-origin: ${tailBaseX}px ${tailBaseY}px;
+      animation: wag ${speedCfg.sway} ease-in-out infinite;
+    }
+    @keyframes wag {
+      0%, 100% { transform: rotate(-12deg); }
+      50% { transform: rotate(10deg); }
+    }
   </style>
 
+  <path id="tail" d="M${tailBaseX},${tailBaseY} C ${tailBaseX + 27},${tailBaseY + 8} ${tailBaseX + 42},${tailBaseY - 15} ${tailBaseX + 37},${tailBaseY - 40} C ${tailBaseX + 34},${tailBaseY - 60} ${tailBaseX + 15},${tailBaseY - 68} ${tailBaseX + 7},${tailBaseY - 55}" />
+
   <g id="cat-group">
-    <text x="50%" y="${startY}" text-anchor="middle" xml:space="preserve">${escapeXml(
-      topLine
-    )}</text>
-    <text id="eyes-open" x="50%" y="${startY + lineHeight}" text-anchor="middle" xml:space="preserve">${escapeXml(
-      eyesOpen
-    )}</text>
-    <text id="eyes-closed" x="50%" y="${startY + lineHeight}" text-anchor="middle" xml:space="preserve">${escapeXml(
-      eyesClosed
-    )}</text>
-    ${bodyTspans}
+    ${row(ROWS.head, startY)}
+    ${row(ROWS.eyesOpen, startY + lineHeight, 'eyes-open')}
+    ${row(ROWS.eyesClosed, startY + lineHeight, 'eyes-closed')}
+    ${row(ROWS.whiskers, startY + 2 * lineHeight)}
+    ${row(ROWS.legs, startY + 3 * lineHeight)}
+    ${row(ROWS.feet, startY + 4 * lineHeight)}
   </g>
 </svg>`;
 }
