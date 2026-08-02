@@ -59,10 +59,10 @@ function buildCatSvg({ speed, colors }) {
       text
     )}</text>`;
 
-  // Anchored just past the right edge of the text block so the tail curls
-  // beside the cat instead of crossing over the legs/feet glyphs.
-  const tailBaseX = Math.round(startX + MAX_ROW_LEN * CHAR_WIDTH);
-  const tailBaseY = startY + 4 * lineHeight;
+  // Anchored right at the edge of the last foot glyph so the tail reads as
+  // attached to the body instead of floating next to it.
+  const tailBaseX = Math.round(startX + MAX_ROW_LEN * CHAR_WIDTH - 4);
+  const tailBaseY = startY + 4 * lineHeight - 4;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <style>
@@ -98,7 +98,7 @@ function buildCatSvg({ speed, colors }) {
     #tail {
       fill: none;
       stroke: ${catColor};
-      stroke-width: 3;
+      stroke-width: 2.5;
       stroke-linecap: round;
       filter: ${glow};
       transform-box: view-box;
@@ -106,12 +106,12 @@ function buildCatSvg({ speed, colors }) {
       animation: wag ${speedCfg.sway} ease-in-out infinite;
     }
     @keyframes wag {
-      0%, 100% { transform: rotate(-12deg); }
-      50% { transform: rotate(10deg); }
+      0%, 100% { transform: rotate(-10deg); }
+      50% { transform: rotate(8deg); }
     }
   </style>
 
-  <path id="tail" d="M${tailBaseX},${tailBaseY} C ${tailBaseX + 27},${tailBaseY + 8} ${tailBaseX + 42},${tailBaseY - 15} ${tailBaseX + 37},${tailBaseY - 40} C ${tailBaseX + 34},${tailBaseY - 60} ${tailBaseX + 15},${tailBaseY - 68} ${tailBaseX + 7},${tailBaseY - 55}" />
+  <path id="tail" d="M${tailBaseX},${tailBaseY} C ${tailBaseX + 16},${tailBaseY - 12} ${tailBaseX + 26},${tailBaseY - 32} ${tailBaseX + 16},${tailBaseY - 48}" />
 
   <g id="cat-group">
     ${row(ROWS.head, startY)}
