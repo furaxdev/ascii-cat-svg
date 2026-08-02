@@ -17,9 +17,9 @@ function readCatParams(req) {
   };
 }
 
-function sendSvg(res, svg) {
+function sendSvg(res, svg, cacheControl = 'no-cache, max-age=0') {
   res.set('Content-Type', 'image/svg+xml');
-  res.set('Cache-Control', 'no-cache, max-age=0');
+  res.set('Cache-Control', cacheControl);
   res.send(svg);
 }
 
@@ -48,7 +48,11 @@ app.get('/visits', async (req, res) => {
   try {
     const visitorKey = `${req.ip}:${req.get('user-agent') || ''}`;
     const count = await incrementCount(visitorKey);
-    sendSvg(res, buildVisitsSvg({ colors, count }));
+    // GitHub proxies README images through camo, which rotates source IPs on
+    // every reload — that defeats IP-based dedup entirely. Caching the
+    // response is what actually stops reload-spam: camo (and browsers) will
+    // serve this cached copy instead of hitting the origin again.
+    sendSvg(res, buildVisitsSvg({ colors, count }), 'public, max-age=3600');
   } catch (err) {
     console.error('visits counter error:', err.message);
     res.status(502);
