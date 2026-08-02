@@ -43,8 +43,10 @@ Réponse : `image/svg+xml`, SVG pur (pas de canvas, pas de rendu image côté se
 
 ## Utilisation dans un README
 
+Service déployé et live : **https://ascii-cat-svg.onrender.com/cat**
+
 ```markdown
-[![Sitting Cat](https://ascii-cat-svg.onrender.com/cat?theme=dark&colors=purple)](https://github.com/ton-user/ton-repo)
+[![Sitting Cat](https://ascii-cat-svg.onrender.com/cat?theme=dark&colors=purple)](https://github.com/furaxdev/ascii-cat-svg)
 ```
 
-> Note : le plan gratuit de Render met le service en veille après inactivité ; le premier chargement peut prendre quelques secondes.
+> Note : le plan gratuit de Render met le service en veille après inactivité ; le premier chargement peut prendre quelques secondes (cold start).
