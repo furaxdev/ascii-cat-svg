@@ -9,6 +9,7 @@ const { fetchLastCommit, buildLastCommitSvg } = require('./lib/githubActivity');
 const { fetchDiscordPresence, buildDiscordSvg } = require('./lib/discord');
 const spotify = require('./lib/spotify');
 const { buildShowcaseHtml } = require('./lib/showcase');
+const { startKeepAlive } = require('./keep_alive');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -172,4 +173,5 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`ASCII cat SVG service running on port ${PORT}`);
+  startKeepAlive();
 });
