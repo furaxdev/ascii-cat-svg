@@ -26,13 +26,12 @@ Paramètres de query optionnels :
 
 | Param    | Valeurs               | Défaut  |
 |----------|------------------------|---------|
-| `theme`  | `dark`, `light`        | `dark`  |
 | `speed`  | `slow`, `normal`, `fast` | `normal` |
 | `colors` | `green`, `blue`, `purple` | `green` |
 
-Exemple : `/cat?theme=dark&speed=fast&colors=purple`
+Exemple : `/cat?speed=fast&colors=purple`
 
-Réponse : `image/svg+xml`, SVG pur (pas de canvas, pas de rendu image côté serveur).
+Fond transparent, juste le chat animé. Réponse : `image/svg+xml`, SVG pur (pas de canvas, pas de rendu image côté serveur).
 
 ## Déploiement sur Render.com
 
@@ -46,7 +45,7 @@ Réponse : `image/svg+xml`, SVG pur (pas de canvas, pas de rendu image côté se
 Service déployé et live : **https://ascii-cat-svg.onrender.com/cat**
 
 ```markdown
-[![Sitting Cat](https://ascii-cat-svg.onrender.com/cat?theme=dark&colors=purple)](https://github.com/furaxdev/ascii-cat-svg)
+[![Sitting Cat](https://ascii-cat-svg.onrender.com/cat?colors=purple)](https://github.com/furaxdev/ascii-cat-svg)
 ```
 
 > Note : le plan gratuit de Render met le service en veille après inactivité ; le premier chargement peut prendre quelques secondes (cold start).
