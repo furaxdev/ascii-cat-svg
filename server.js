@@ -43,16 +43,19 @@ app.get('/quote', (req, res) => {
 
 app.get('/visits', async (req, res) => {
   const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  // Required so different people embedding /visits each get their own
+  // independent counter instead of sharing one global count.
+  const siteKey = req.query.key;
 
-  if (!isConfigured()) {
-    res.status(503);
+  if (!isConfigured() || !siteKey) {
+    res.status(siteKey ? 503 : 400);
     sendSvg(res, buildVisitsSvg({ colors, count: '?' }));
     return;
   }
 
   try {
     const visitorKey = `${req.ip}:${req.get('user-agent') || ''}`;
-    const count = await incrementCount(visitorKey);
+    const count = await incrementCount(siteKey, visitorKey);
     // GitHub proxies README images through camo, which rotates source IPs on
     // every reload — that defeats IP-based dedup entirely. Caching the
     // response is what actually stops reload-spam: camo (and browsers) will
@@ -107,15 +110,16 @@ app.get('/discord', async (req, res) => {
 
 app.get('/spotify', async (req, res) => {
   const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const label = req.query.user;
 
-  if (!spotify.isConfigured() || !spotify.hasRefreshToken()) {
-    res.status(503);
+  if (!spotify.isConfigured() || !label) {
+    res.status(label ? 503 : 400);
     sendSvg(res, spotify.buildSpotifySvg({ colors, track: null }));
     return;
   }
 
   try {
-    const track = await spotify.fetchNowPlaying();
+    const track = await spotify.fetchNowPlaying(label);
     sendSvg(res, spotify.buildSpotifySvg({ colors, track }), 'public, max-age=30');
   } catch (err) {
     console.error('spotify now-playing error:', err.message);
@@ -129,27 +133,32 @@ app.get('/spotify/login', (req, res) => {
     res.status(503).send('Spotify not configured (missing SPOTIFY_CLIENT_ID/SECRET)');
     return;
   }
-  res.redirect(spotify.buildAuthUrl());
+  const label = req.query.user;
+  if (!label) {
+    res.status(400).send('Add ?user=<a name for yourself> to the URL, e.g. /spotify/login?user=yourname');
+    return;
+  }
+  res.redirect(spotify.buildAuthUrl(label));
 });
 
 app.get('/spotify/callback', async (req, res) => {
-  const { code, error } = req.query;
+  const { code, error, state } = req.query;
   if (error) {
     res.status(400).send(`Spotify auth error: ${error}`);
     return;
   }
-  if (!code) {
-    res.status(400).send('Missing code');
+  if (!code || !state) {
+    res.status(400).send('Missing code or state');
     return;
   }
 
   try {
-    const tokens = await spotify.exchangeCodeForToken(code);
+    await spotify.exchangeCodeForToken(code, state);
     res.set('Content-Type', 'text/html; charset=utf-8');
     res.send(`<!doctype html><html><body style="font-family:monospace;background:#0f0c29;color:#00ff88;padding:40px;">
       <h2>Spotify connected ✅</h2>
-      <p>Copy this refresh token and send it back — it will be stored as a Render secret, not in the repo:</p>
-      <textarea style="width:100%;height:80px;background:#1a1a2e;color:#00ff88;border:1px solid #00ff88;padding:10px;">${tokens.refresh_token}</textarea>
+      <p>You're all set, <b>${state}</b>. Use this badge in your README:</p>
+      <pre style="background:#1a1a2e;padding:10px;border:1px solid #00ff88;">![Spotify](https://ascii-cat-svg.onrender.com/spotify?user=${encodeURIComponent(state)})</pre>
     </body></html>`);
   } catch (err) {
     res.status(502).send(`Token exchange failed: ${err.message}`);
