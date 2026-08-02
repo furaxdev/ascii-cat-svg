@@ -4,6 +4,9 @@ const { buildCatSitSvg } = require('./lib/catSit');
 const { buildCatSleepSvg } = require('./lib/catSleep');
 const { buildQuoteSvg } = require('./lib/quote');
 const { incrementCount, buildVisitsSvg, isConfigured } = require('./lib/visits');
+const { buildClockSvg } = require('./lib/clock');
+const { fetchLastCommit, buildLastCommitSvg } = require('./lib/githubActivity');
+const { buildShowcaseHtml } = require('./lib/showcase');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -60,8 +63,29 @@ app.get('/visits', async (req, res) => {
   }
 });
 
+app.get('/clock', (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const tz = req.query.tz || 'Europe/Paris';
+  sendSvg(res, buildClockSvg({ colors, tz }), 'public, max-age=60');
+});
+
+app.get('/github/last-commit', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const username = req.query.username || 'furaxdev';
+
+  try {
+    const commit = await fetchLastCommit(username);
+    sendSvg(res, buildLastCommitSvg({ colors, commit }), 'public, max-age=300');
+  } catch (err) {
+    console.error('last-commit error:', err.message);
+    res.status(502);
+    sendSvg(res, buildLastCommitSvg({ colors, commit: null }));
+  }
+});
+
 app.get('/', (req, res) => {
-  res.redirect('/cat');
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  res.send(buildShowcaseHtml());
 });
 
 app.listen(PORT, () => {
