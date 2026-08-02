@@ -16,10 +16,15 @@ const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', true);
 
+function readGlow(req) {
+  return req.query.glow !== 'off';
+}
+
 function readCatParams(req) {
   return {
     speed: sanitize(req.query.speed, ['slow', 'normal', 'fast'], 'normal'),
     colors: sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green'),
+    glow: readGlow(req),
   };
 }
 
@@ -39,18 +44,19 @@ app.get('/cat/sleep', (req, res) => {
 
 app.get('/quote', (req, res) => {
   const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
-  sendSvg(res, buildQuoteSvg({ colors }));
+  sendSvg(res, buildQuoteSvg({ colors, glow: readGlow(req) }));
 });
 
 app.get('/visits', async (req, res) => {
   const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
   // Required so different people embedding /visits each get their own
   // independent counter instead of sharing one global count.
   const siteKey = req.query.key;
 
   if (!isConfigured() || !siteKey) {
     res.status(siteKey ? 503 : 400);
-    sendSvg(res, buildVisitsSvg({ colors, count: '?' }));
+    sendSvg(res, buildVisitsSvg({ colors, count: '?', glow }));
     return;
   }
 
@@ -61,51 +67,53 @@ app.get('/visits', async (req, res) => {
     // every reload — that defeats IP-based dedup entirely. Caching the
     // response is what actually stops reload-spam: camo (and browsers) will
     // serve this cached copy instead of hitting the origin again.
-    sendSvg(res, buildVisitsSvg({ colors, count }), 'public, max-age=3600');
+    sendSvg(res, buildVisitsSvg({ colors, count, glow }), 'public, max-age=3600');
   } catch (err) {
     console.error('visits counter error:', err.message);
     res.status(502);
-    sendSvg(res, buildVisitsSvg({ colors, count: '?' }));
+    sendSvg(res, buildVisitsSvg({ colors, count: '?', glow }));
   }
 });
 
 app.get('/clock', (req, res) => {
   const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
   const tz = req.query.tz || 'Europe/Paris';
-  sendSvg(res, buildClockSvg({ colors, tz }), 'public, max-age=60');
+  sendSvg(res, buildClockSvg({ colors, tz, glow: readGlow(req) }), 'public, max-age=60');
 });
 
 app.get('/github/last-commit', async (req, res) => {
   const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
   const username = req.query.username || 'furaxdev';
 
   try {
     const commit = await fetchLastCommit(username);
-    sendSvg(res, buildLastCommitSvg({ colors, commit }), 'public, max-age=300');
+    sendSvg(res, buildLastCommitSvg({ colors, commit, glow }), 'public, max-age=300');
   } catch (err) {
     console.error('last-commit error:', err.message);
     res.status(502);
-    sendSvg(res, buildLastCommitSvg({ colors, commit: null }));
+    sendSvg(res, buildLastCommitSvg({ colors, commit: null, glow }));
   }
 });
 
 app.get('/discord', async (req, res) => {
   const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
   const userId = req.query.id;
 
   if (!userId) {
     res.status(400);
-    sendSvg(res, buildDiscordSvg({ colors, presence: null }));
+    sendSvg(res, buildDiscordSvg({ colors, presence: null, glow }));
     return;
   }
 
   try {
     const presence = await fetchDiscordPresence(userId);
-    sendSvg(res, buildDiscordSvg({ colors, presence }), 'public, max-age=30');
+    sendSvg(res, buildDiscordSvg({ colors, presence, glow }), 'public, max-age=30');
   } catch (err) {
     console.error('discord presence error:', err.message);
     res.status(502);
-    sendSvg(res, buildDiscordSvg({ colors, presence: null }));
+    sendSvg(res, buildDiscordSvg({ colors, presence: null, glow }));
   }
 });
 
