@@ -6,6 +6,7 @@ const { buildQuoteSvg } = require('./lib/quote');
 const { incrementCount, buildVisitsSvg, isConfigured } = require('./lib/visits');
 const { buildClockSvg } = require('./lib/clock');
 const { fetchLastCommit, buildLastCommitSvg } = require('./lib/githubActivity');
+const { fetchDiscordPresence, buildDiscordSvg } = require('./lib/discord');
 const { buildShowcaseHtml } = require('./lib/showcase');
 
 const app = express();
@@ -80,6 +81,26 @@ app.get('/github/last-commit', async (req, res) => {
     console.error('last-commit error:', err.message);
     res.status(502);
     sendSvg(res, buildLastCommitSvg({ colors, commit: null }));
+  }
+});
+
+app.get('/discord', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const userId = req.query.id;
+
+  if (!userId) {
+    res.status(400);
+    sendSvg(res, buildDiscordSvg({ colors, presence: null }));
+    return;
+  }
+
+  try {
+    const presence = await fetchDiscordPresence(userId);
+    sendSvg(res, buildDiscordSvg({ colors, presence }), 'public, max-age=30');
+  } catch (err) {
+    console.error('discord presence error:', err.message);
+    res.status(502);
+    sendSvg(res, buildDiscordSvg({ colors, presence: null }));
   }
 });
 
