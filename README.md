@@ -24,6 +24,8 @@ Respiration douce + "z Z z" flottants.
 
 ### `GET /visits` — compteur de vues
 
+![Visit counter](https://ascii-cat-svg.onrender.com/visits?key=furaxdev&colors=blue&glow=off)
+
 Badge `🐾 views: N`, persistant via un Gist GitHub privé (voir [Configuration](#configuration)).
 
 ## Paramètres de query communs
