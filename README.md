@@ -18,7 +18,9 @@ Respiration douce + "z Z z" flottants.
 
 ### `GET /quote` — fait aléatoire sur les chats
 
-Badge texte avec une citation/fact différent à chaque chargement.
+![Cat Fact](https://ascii-cat-svg.onrender.com/quote)
+
+<small>Badge texte avec une citation/fact différent à chaque chargement.</small>
 
 ### `GET /visits` — compteur de vues
 
