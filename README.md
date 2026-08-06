@@ -35,14 +35,6 @@ Badge `🐾 views: N`, persistant via un Gist GitHub privé (voir [Configuration
 | `speed`  | `slow`, `normal`, `fast`   | `normal` | `/cat`, `/cat/sleep` |
 | `colors` | `green`, `blue`, `purple`  | `green`  | tous |
 
-## Lancer en local
-
-```bash
-npm install
-npm start
-# http://localhost:3000/cat, /cat/sleep, /quote, /visits
-```
-
 ## Utilisation dans un README
 
 Service déployé et live : **https://ascii-cat-svg.onrender.com**
