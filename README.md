@@ -24,8 +24,6 @@ Respiration douce + "z Z z" flottants.
 
 ### `GET /visits` — compteur de vues
 
-![Views](https://ascii-cat-svg.onrender.com/visits)
-
 Badge `🐾 views: N`, persistant via un Gist GitHub privé (voir [Configuration](#configuration)).
 
 ## Paramètres de query communs
