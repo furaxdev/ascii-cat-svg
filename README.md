@@ -6,13 +6,7 @@ Petit service Express qui génère à la volée des SVG animés sur le thème ch
 
 ### `GET /cat` — chat assis
 
-```
-  /\_/\
- ( o.o )
-  > ^ <
- /|   |\
-(_)   (_)
-```
+[![Sitting Cat](https://ascii-cat-svg.onrender.com/cat?colors=purple)](https://github.com/furaxdev/ascii-cat-svg)
 
 Clignement des yeux, léger balancement, queue qui remue.
 
