@@ -12,12 +12,7 @@ Clignement des yeux, léger balancement, queue qui remue.
 
 ### `GET /cat/sleep` — chat qui dort
 
-```
-  /\_/\
- ( -.- )
-  )   (
- (__ __)
-```
+[![Sleeping Cat](https://ascii-cat-svg.onrender.com/cat/sleep?colors=blue)](https://github.com/furaxdev/ascii-cat-svg)
 
 Respiration douce + "z Z z" flottants.
 
