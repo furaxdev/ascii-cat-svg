@@ -7,10 +7,10 @@ Petit service Express qui génère à la volée des SVG animés sur le thème ch
 ### `GET /cat` — chat assis
 
 ```
- /\_/\
-( o.o )
- > ^ <
-/|   |\
+  /\_/\
+ ( o.o )
+  > ^ <
+ /|   |\
 (_)   (_)
 ```
 
@@ -19,8 +19,8 @@ Clignement des yeux, léger balancement, queue qui remue.
 ### `GET /cat/sleep` — chat qui dort
 
 ```
- /\_/\
-( -.- )
+  /\_/\
+ ( -.- )
   )   (
  (__ __)
 ```
