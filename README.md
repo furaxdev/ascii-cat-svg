@@ -45,5 +45,3 @@ Service déployé et live : **https://ascii-cat-svg.onrender.com**
 ![Cat Fact](https://ascii-cat-svg.onrender.com/quote)
 ![Views](https://ascii-cat-svg.onrender.com/visits)
 ```
-
-> Note : le plan gratuit de Render met le service en veille après inactivité ; le premier chargement peut prendre quelques secondes (cold start).
