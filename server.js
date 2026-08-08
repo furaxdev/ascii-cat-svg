@@ -8,7 +8,7 @@ const { buildClockSvg } = require('./lib/clock');
 const { fetchLastCommit, buildLastCommitSvg } = require('./lib/githubActivity');
 const { fetchDiscordPresence, buildDiscordSvg } = require('./lib/discord');
 const spotify = require('./lib/spotify');
-const { buildShowcaseHtml } = require('./lib/showcase');
+const { buildIndexHtml, buildToolPageHtml } = require('./lib/showcase');
 const { startKeepAlive } = require('./keep_alive');
 const { fetchWeather, buildWeatherSvg } = require('./lib/weather');
 const { fetchRepoStats, fetchFollowers, buildRepoStatsSvg, buildFollowersSvg } = require('./lib/githubRepo');
@@ -386,7 +386,17 @@ app.get('/qr', async (req, res) => {
 
 app.get('/', (req, res) => {
   res.set('Content-Type', 'text/html; charset=utf-8');
-  res.send(buildShowcaseHtml());
+  res.send(buildIndexHtml());
+});
+
+app.get('/g/:id', (req, res) => {
+  const html = buildToolPageHtml(req.params.id);
+  if (!html) {
+    res.status(404).send('Unknown tool');
+    return;
+  }
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
 });
 
 app.listen(PORT, () => {
