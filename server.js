@@ -24,6 +24,7 @@ const {
 const { buildCountdownSvg, buildAgeSvg, buildMoonPhaseSvg } = require('./lib/timeCalc');
 const { checkUptime, buildUptimeSvg } = require('./lib/uptime');
 const { buildQrSvg } = require('./lib/qrcode');
+const giphy = require('./lib/giphy');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -392,6 +393,29 @@ app.get('/gif', (req, res) => {
     ? `https://cataas.com/cat/gif/says/${encodeURIComponent(text)}`
     : 'https://cataas.com/cat/gif';
   res.redirect(302, target);
+});
+
+app.get('/giphy', async (req, res) => {
+  const query = req.query.q;
+  if (!giphy.isConfigured()) {
+    res.status(503).send('Giphy not configured (missing GIPHY_API_KEY)');
+    return;
+  }
+  if (!query) {
+    res.status(400).send('Add ?q=<search term>');
+    return;
+  }
+  try {
+    const url = await giphy.fetchRandomGifUrl(query);
+    if (!url) {
+      res.status(404).send('No results');
+      return;
+    }
+    res.redirect(302, url);
+  } catch (err) {
+    console.error('giphy error:', err.message);
+    res.status(502).send('Failed to fetch gif');
+  }
 });
 
 app.get('/', (req, res) => {
