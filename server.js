@@ -24,6 +24,7 @@ const {
 const { buildCountdownSvg, buildAgeSvg, buildMoonPhaseSvg } = require('./lib/timeCalc');
 const { checkUptime, buildUptimeSvg } = require('./lib/uptime');
 const { buildQrSvg } = require('./lib/qrcode');
+const tenor = require('./lib/tenor');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -381,6 +382,39 @@ app.get('/qr', async (req, res) => {
   } catch (err) {
     console.error('qr error:', err.message);
     res.status(502).send('Failed to generate QR code');
+  }
+});
+
+app.get('/gif', (req, res) => {
+  const text = req.query.text;
+  // Redirect instead of proxying the bytes ourselves — cataas gifs run a
+  // couple MB each, no reason to burn our own bandwidth relaying them.
+  const target = text
+    ? `https://cataas.com/cat/gif/says/${encodeURIComponent(text)}`
+    : 'https://cataas.com/cat/gif';
+  res.redirect(302, target);
+});
+
+app.get('/tenor', async (req, res) => {
+  const query = req.query.q;
+  if (!tenor.isConfigured()) {
+    res.status(503).send('Tenor not configured (missing TENOR_API_KEY)');
+    return;
+  }
+  if (!query) {
+    res.status(400).send('Add ?q=<search term>');
+    return;
+  }
+  try {
+    const url = await tenor.fetchRandomGifUrl(query);
+    if (!url) {
+      res.status(404).send('No results');
+      return;
+    }
+    res.redirect(302, url);
+  } catch (err) {
+    console.error('tenor error:', err.message);
+    res.status(502).send('Failed to fetch gif');
   }
 });
 
