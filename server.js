@@ -10,6 +10,20 @@ const { fetchDiscordPresence, buildDiscordSvg } = require('./lib/discord');
 const spotify = require('./lib/spotify');
 const { buildShowcaseHtml } = require('./lib/showcase');
 const { startKeepAlive } = require('./keep_alive');
+const { fetchWeather, buildWeatherSvg } = require('./lib/weather');
+const { fetchRepoStats, fetchFollowers, buildRepoStatsSvg, buildFollowersSvg } = require('./lib/githubRepo');
+const { fetchJoke, fetchAdvice, fetchQuote, buildJokeSvg, buildAdviceSvg, buildQuoteBadgeSvg } = require('./lib/funApis');
+const {
+  fetchCryptoPrice,
+  fetchExchangeRate,
+  fetchNpmDownloads,
+  buildCryptoSvg,
+  buildExchangeRateSvg,
+  buildNpmDownloadsSvg,
+} = require('./lib/finance');
+const { buildCountdownSvg, buildAgeSvg, buildMoonPhaseSvg } = require('./lib/timeCalc');
+const { checkUptime, buildUptimeSvg } = require('./lib/uptime');
+const { buildQrSvg } = require('./lib/qrcode');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -171,6 +185,202 @@ app.get('/spotify/callback', async (req, res) => {
     </body></html>`);
   } catch (err) {
     res.status(502).send(`Token exchange failed: ${err.message}`);
+  }
+});
+
+app.get('/weather', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const city = req.query.city;
+  if (!city) {
+    res.status(400);
+    sendSvg(res, buildWeatherSvg({ colors, glow, weather: null }));
+    return;
+  }
+  try {
+    const weather = await fetchWeather(city);
+    sendSvg(res, buildWeatherSvg({ colors, glow, weather }), 'public, max-age=900');
+  } catch (err) {
+    console.error('weather error:', err.message);
+    res.status(502);
+    sendSvg(res, buildWeatherSvg({ colors, glow, weather: null }));
+  }
+});
+
+app.get('/github/repo', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const owner = req.query.owner;
+  const repo = req.query.repo;
+  if (!owner || !repo) {
+    res.status(400);
+    sendSvg(res, buildRepoStatsSvg({ colors, glow, stats: null, repoName: '' }));
+    return;
+  }
+  try {
+    const stats = await fetchRepoStats(owner, repo);
+    sendSvg(res, buildRepoStatsSvg({ colors, glow, stats, repoName: repo }), 'public, max-age=600');
+  } catch (err) {
+    console.error('repo stats error:', err.message);
+    res.status(502);
+    sendSvg(res, buildRepoStatsSvg({ colors, glow, stats: null, repoName: repo }));
+  }
+});
+
+app.get('/github/followers', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const username = req.query.username;
+  if (!username) {
+    res.status(400);
+    sendSvg(res, buildFollowersSvg({ colors, glow, stats: null, username: '' }));
+    return;
+  }
+  try {
+    const stats = await fetchFollowers(username);
+    sendSvg(res, buildFollowersSvg({ colors, glow, stats, username }), 'public, max-age=600');
+  } catch (err) {
+    console.error('followers error:', err.message);
+    res.status(502);
+    sendSvg(res, buildFollowersSvg({ colors, glow, stats: null, username }));
+  }
+});
+
+app.get('/joke', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  try {
+    const joke = await fetchJoke();
+    sendSvg(res, buildJokeSvg({ colors, glow, joke }));
+  } catch (err) {
+    console.error('joke error:', err.message);
+    res.status(502);
+    sendSvg(res, buildJokeSvg({ colors, glow, joke: null }));
+  }
+});
+
+app.get('/advice', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  try {
+    const advice = await fetchAdvice();
+    sendSvg(res, buildAdviceSvg({ colors, glow, advice }));
+  } catch (err) {
+    console.error('advice error:', err.message);
+    res.status(502);
+    sendSvg(res, buildAdviceSvg({ colors, glow, advice: null }));
+  }
+});
+
+app.get('/quote/general', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  try {
+    const quote = await fetchQuote();
+    sendSvg(res, buildQuoteBadgeSvg({ colors, glow, quote }));
+  } catch (err) {
+    console.error('quote error:', err.message);
+    res.status(502);
+    sendSvg(res, buildQuoteBadgeSvg({ colors, glow, quote: null }));
+  }
+});
+
+app.get('/crypto', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const coin = req.query.coin || 'btc';
+  try {
+    const data = await fetchCryptoPrice(coin);
+    sendSvg(res, buildCryptoSvg({ colors, glow, coin, data }), 'public, max-age=120');
+  } catch (err) {
+    console.error('crypto error:', err.message);
+    res.status(502);
+    sendSvg(res, buildCryptoSvg({ colors, glow, coin, data: null }));
+  }
+});
+
+app.get('/exchange-rate', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const from = req.query.from || 'USD';
+  const to = req.query.to || 'EUR';
+  try {
+    const rate = await fetchExchangeRate(from, to);
+    sendSvg(res, buildExchangeRateSvg({ colors, glow, from, to, rate }), 'public, max-age=3600');
+  } catch (err) {
+    console.error('exchange rate error:', err.message);
+    res.status(502);
+    sendSvg(res, buildExchangeRateSvg({ colors, glow, from, to, rate: null }));
+  }
+});
+
+app.get('/npm', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const pkg = req.query.package;
+  if (!pkg) {
+    res.status(400);
+    sendSvg(res, buildNpmDownloadsSvg({ colors, glow, pkg: '', downloads: null }));
+    return;
+  }
+  try {
+    const downloads = await fetchNpmDownloads(pkg);
+    sendSvg(res, buildNpmDownloadsSvg({ colors, glow, pkg, downloads }), 'public, max-age=3600');
+  } catch (err) {
+    console.error('npm downloads error:', err.message);
+    res.status(502);
+    sendSvg(res, buildNpmDownloadsSvg({ colors, glow, pkg, downloads: null }));
+  }
+});
+
+app.get('/countdown', (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const targetDate = req.query.date;
+  const label = req.query.label;
+  sendSvg(res, buildCountdownSvg({ colors, glow, targetDate, label }), 'public, max-age=3600');
+});
+
+app.get('/age', (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const birthDate = req.query.birthdate;
+  const label = req.query.label;
+  sendSvg(res, buildAgeSvg({ colors, glow, birthDate, label }), 'public, max-age=3600');
+});
+
+app.get('/moon', (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  sendSvg(res, buildMoonPhaseSvg({ colors, glow }), 'public, max-age=3600');
+});
+
+app.get('/uptime', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const glow = readGlow(req);
+  const url = req.query.url;
+  if (!url) {
+    res.status(400);
+    sendSvg(res, buildUptimeSvg({ colors, glow, result: { up: false, status: null, ms: null } }));
+    return;
+  }
+  const result = await checkUptime(url);
+  sendSvg(res, buildUptimeSvg({ colors, glow, result }), 'public, max-age=60');
+});
+
+app.get('/qr', async (req, res) => {
+  const colors = sanitize(req.query.colors, ['green', 'blue', 'purple'], 'green');
+  const text = req.query.text;
+  if (!text) {
+    res.status(400).send('Add ?text=<content to encode>');
+    return;
+  }
+  try {
+    const svg = await buildQrSvg({ colors, text });
+    sendSvg(res, svg, 'public, max-age=3600');
+  } catch (err) {
+    console.error('qr error:', err.message);
+    res.status(502).send('Failed to generate QR code');
   }
 });
 
